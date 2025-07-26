@@ -84,6 +84,52 @@ def run_twelve_group():
             print(f"Nema podatka za {symbol}")
         time.sleep(2)
 
+# ----------- FINNHUB – Group 2 -----------
+finnhub_api_key_2 = "d229d61r01qt8677e7ngd229d61r01qt8677e7o0"
+finnhub_symbols_2 = ["AAPL", "MSFT", "TSLA", "GOOGL", "AMZN"]
+
+def run_finnhub_group2():
+    for symbol in finnhub_symbols_2:
+        url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={finnhub_api_key_2}"
+        try:
+            response = requests.get(url)
+            data = response.json()
+            price = float(data.get("c", 0))
+            entry = {
+                "time": datetime.utcnow().isoformat(),
+                "symbol": symbol,
+                "price": price
+            }
+            with open(f"{symbol.lower()}.json", "a") as f:
+                f.write(json.dumps(entry) + "\n")
+            print("Snimljeno (Group 2):", entry)
+        except Exception as e:
+            print(f"Greška za {symbol} (Group 2): {e}")
+        time.sleep(2)
+
+# ----------- FINNHUB – Group 3 -----------
+finnhub_api_key_3 = "d22dlg9r01qr7ajl04sgd22dlg9r01qr7ajl04t0"
+finnhub_symbols_3 = ["NVDA", "META", "NFLX", "BABA", "AMD"]
+
+def run_finnhub_group3():
+    for symbol in finnhub_symbols_3:
+        url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={finnhub_api_key_3}"
+        try:
+            response = requests.get(url)
+            data = response.json()
+            price = float(data.get("c", 0))
+            entry = {
+                "time": datetime.utcnow().isoformat(),
+                "symbol": symbol,
+                "price": price
+            }
+            with open(f"{symbol.lower()}.json", "a") as f:
+                f.write(json.dumps(entry) + "\n")
+            print("Snimljeno (Group 3):", entry)
+        except Exception as e:
+            print(f"Greška za {symbol} (Group 3): {e}")
+        time.sleep(2)
+
 # ----------- GLAVNA PETLJA -----------
 def run():
     while True:
@@ -114,6 +160,12 @@ def run():
 
         # Twelve Data
         run_twelve_group()
+
+        # Finnhub Group 2
+        run_finnhub_group2()
+
+        # Finnhub Group 3
+        run_finnhub_group3()
 
         time.sleep(300)  # 5 minuta pauza
 
