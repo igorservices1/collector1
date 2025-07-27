@@ -129,6 +129,29 @@ def run_finnhub_group3():
         except Exception as e:
             print(f"Greška za {symbol} (Group 3): {e}")
         time.sleep(2)
+        # ----------- FINNHUB – Group 5: Industrija i ETF ----------- 
+finnhub_api_key_5 = "d1pl3r9r01qu436fdcs0d1pl3r9r01qu436fdcsg"
+finnhub_symbols_5 = ["XOM", "F", "BITO", "SPY", "QQQ"]
+
+def run_finnhub_group5():
+    for symbol in finnhub_symbols_5:
+        url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={finnhub_api_key_5}"
+        try:
+            response = requests.get(url)
+            data = response.json()
+            price = float(data.get("c", 0))
+            entry = {
+                "time": datetime.utcnow().isoformat(),
+                "symbol": symbol,
+                "price": price
+            }
+            with open(f"{symbol.lower()}.json", "a") as f:
+                f.write(json.dumps(entry) + "\n")
+            print("Snimljeno (Group 5):", entry)
+        except Exception as e:
+            print(f"Greška za {symbol} (Group 5): {e}")
+        time.sleep(2)
+
 
 # ----------- GLAVNA PETLJA -----------
 def run():
@@ -166,6 +189,10 @@ def run():
 
         # Finnhub Group 3
         run_finnhub_group3()
+
+        # Finnhub Group 5
+        run_finnhub_group5()
+
 
         time.sleep(300)  # 5 minuta pauza
 
