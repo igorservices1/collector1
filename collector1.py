@@ -1,14 +1,30 @@
-
 import requests, json, time
 from datetime import datetime
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
+from pydrive2.auth import ServiceAccountCredentials
 
-# ----------- ALPHA VANTAGE – Forex grupa -----------
-api_keys = {
-    "3QBW8KKOEHGVNVIO": ["EURUSD", "USDJPY", "GBPUSD", "USDCHF", "USDCAD"]
-}
+def upload_to_drive(local_filename, remote_name=None):
+    if remote_name is None:
+        remote_name = local_filename
+
+    gauth = GoogleAuth()
+    gauth.credentials = ServiceAccountCredentials.from_json_keyfile_name(
+        "service_account.json",
+        ["https://www.googleapis.com/auth/drive"]
+    )
+    drive = GoogleDrive(gauth)
+
+    file = drive.CreateFile({'title': remote_name})
+    file.SetContentFile(local_filename)
+    file.Upload()
+    print(f"📤 Poslato na Google Drive: {remote_name}")
 
 def is_weekend():
     return datetime.utcnow().weekday() >= 5  # 5=subota, 6=nedelja
+api_keys = {
+    "3QBW8KKOEHGVNVIO": ["EURUSD", "USDJPY", "GBPUSD", "USDCHF", "USDCAD"]
+}
 
 def fetch_price(symbol, api_key):
     url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency={symbol[:3]}&to_currency={symbol[3:]}&apikey={api_key}"
@@ -22,7 +38,6 @@ def fetch_price(symbol, api_key):
         print(f"Greška AlphaVantage za {symbol}: {e}")
         return None
 
-# ----------- YAHOO FINANCE – WTI, Silver, Gas -----------
 yahoo_symbols = {
     "CL=F": "wti",
     "SI=F": "silver",
@@ -52,10 +67,10 @@ def run_yahoo_group():
             with open(f"{filename}.json", "a") as f:
                 f.write(json.dumps(entry) + "\n")
             print("Snimljeno:", entry)
+            upload_to_drive(f"{filename}.json")
         else:
             print(f"Nema cene za {symbol}")
         time.sleep(2)
-
 # ----------- TWELVE DATA – XAU/USD, ETH/USD -----------
 twelve_key = "a5879165ff4f4d03ba6e3a218a31cb24"
 twelve_symbols = ["XAU/USD", "ETH/USD"]
@@ -85,6 +100,7 @@ def run_twelve_group():
             with open(filename, "a") as f:
                 f.write(json.dumps(entry) + "\n")
             print("Snimljeno:", entry)
+            upload_to_drive(filename)
         else:
             print(f"Nema podatka za {symbol}")
         time.sleep(2)
@@ -109,10 +125,10 @@ def run_finnhub_group2():
             with open(f"{symbol.lower()}.json", "a") as f:
                 f.write(json.dumps(entry) + "\n")
             print("Snimljeno (Group 2):", entry)
+            upload_to_drive(f"{symbol.lower()}.json")
         except Exception as e:
             print(f"Greška za {symbol} (Group 2): {e}")
         time.sleep(2)
-
 # ----------- FINNHUB – Group 3 -----------
 finnhub_api_key_3 = "d22dlg9r01qr7ajl04sgd22dlg9r01qr7ajl04t0"
 finnhub_symbols_3 = ["NVDA", "META", "NFLX", "BABA", "AMD"]
@@ -133,6 +149,7 @@ def run_finnhub_group3():
             with open(f"{symbol.lower()}.json", "a") as f:
                 f.write(json.dumps(entry) + "\n")
             print("Snimljeno (Group 3):", entry)
+            upload_to_drive(f"{symbol.lower()}.json")
         except Exception as e:
             print(f"Greška za {symbol} (Group 3): {e}")
         time.sleep(2)
@@ -157,13 +174,15 @@ def run_finnhub_group5():
             with open(f"{symbol.lower()}.json", "a") as f:
                 f.write(json.dumps(entry) + "\n")
             print("Snimljeno (Group 5):", entry)
+            upload_to_drive(f"{symbol.lower()}.json")
         except Exception as e:
             print(f"Greška za {symbol} (Group 5): {e}")
         time.sleep(2)
-
 # ----------- GLAVNA PETLJA -----------
 def run():
     while True:
+        start = time.time()
+
         if is_weekend():
             print(">> Vikend je – pauza.")
             time.sleep(3600)
@@ -182,6 +201,7 @@ def run():
                     with open(f"{symbol.lower()}.json", "a") as f:
                         f.write(json.dumps(entry) + "\n")
                     print("Snimljeno:", entry)
+                    upload_to_drive(f"{symbol.lower()}.json")
                 else:
                     print(f"Nema podatka za {symbol}")
                 time.sleep(15)
@@ -192,7 +212,11 @@ def run():
         run_finnhub_group3()
         run_finnhub_group5()
 
-        time.sleep(300)
+        end = time.time()
+        trajanje = end - start
+        pauza = max(0, 300 - trajanje)
+        print(f">>> Ciklus trajao {trajanje:.2f}s, pauza {pauza:.2f}s")
+        time.sleep(pauza)
 
 if __name__ == "__main__":
     run()
